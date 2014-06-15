@@ -1,190 +1,152 @@
-Programming Assignemt 1 - Mario Beck
-========================================================
-
-## Loading the Workspace
-#### Setting the Working Directory
-```{r}
 setwd("~/Dropbox/Coursera/Data Science/05 Reproducable Research/PeerAssessment1/")
-```
-#### Setting the Global Option for Always Echoing the R Code
-The following code will set a global option to always show the code chunk, the result (already set by default) and will cache the results to run faster after first compiling.
-```{r setoptions, echo = T}
-opts_chunk$set(echo = T, cache = T)
-```
-  
-  
-## Loading the Data
-```{r}
-# checking if file directory already exists
-if(!file.exists("./data")){dir.create("./data")}
+# getwd()
+# View(data)
+# attach(data)
+# detach(devtools)
+# rm(list=ls())
 
-# downloading and unziping the file
+## Setting the Global Option for Always Echoing the R Code
+# The following code will set a global option.
+# ```{r setoptions, echo = T}
+# opts_chunk$set(echo = F, results = "hide")
+# ```
+
+
+
+## Loading the Data
+if(!file.exists("./data")){dir.create("./data")}
 fileURL<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 download.file(fileURL,destfile="./data/ActivityData.zip", method="curl")
 unzip("./data/ActivityData.zip")
-
-# reading the file
 activityData<-read.csv("./activity.csv")
-```
+head(activityData)
 
 
-## Processing the Data
-### Excluding NA
-```{r}
-# filling all corresponding rows where there are NA values with NAs
+
+# Processing the Data
+
+## Excluding NA
 activityDatanoNA <- activityData[activityData$steps != is.na(activityData$steps),]
-
-# excluding all NA cases and creating a cleaned dataset
 activityDatanoNA <- activityDatanoNA[complete.cases(activityDatanoNA$steps),]
-```
-In the following the activity Data will always be accessible with and without NA values by calling either "activityData" which will return the dataset with NA values or "activityData" which will return the dataset withOUT NA values.
+# head(activityDatanoNA)
+# length(activityDatanoNA$steps)
+
+## Removing Dates 
+#### Removing date: "2012-10-02" and "2012-11-15" as the number of steps is too low and biases the analysis (probably step-counter not used properly/ functioned that day)
+############### activityDatanoNA <- activityDatanoNA[activityDatanoNA$date!="2012-10-02" & activityDatanoNA$date!="2012-11-15",]
+# head(activityDatanoNA)
+# length(activityDatanoNA$steps)
 
 
-## What is Mean Total Number of Steps Taken per Day?
-### Histogram of Total Number of Steps Taken Each Day
-```{r}
-# splitting the data according to dates (ignoring NA)
+# What is Mean Total Number of Steps Taken per Day?
+## Histogram of Total Number of Steps Taken Each Day
+### Splitting the Data According to Dates (no NA)
 splitOfActivityDatanoNA <- split(activityDatanoNA$steps,activityDatanoNA$date, drop = T)
 
-# calculating the sum of steps for each day (ignoring NA)
+### Calculating the Sum of Steps for Each Day (no NA)
 sumSteps <- sapply(splitOfActivityDatanoNA,sum)
 sumSteps <- as.vector(sumSteps)
-
-# drawing the histogram
-par(mfrow=c(1,1))
-hist(sumSteps, main = "Number of Steps per Day (NA Ignored)", xlab = "Number of Steps per Day")
-```
-
-
 ### Mean Total Number of Steps Taken per Day (no NA)
-```{r}
-# calculating the mean total number of steps taken per day
 meanStepsDate <- sapply(splitOfActivityDatanoNA,mean)
 meanSteps <- as.vector(meanStepsDate)
-
-# returning the total mean
 mean(meanSteps)
-```
-
-
 ### Median Total Number of Steps Taken per Day (no NA)
-```{r}
-# calculating the median total number of steps taken per day
 medianSteps <- sapply(splitOfActivityDatanoNA,median)
 medianSteps <- as.vector(medianSteps)
-
-# returning the total median
 median(medianSteps)
-```
+mean(medianSteps)
+
+hist(sumSteps, main = "Number of Steps per Day (NA Ignored)", xlab = "Number of Steps per Day")
 
 
-## Inputing Missing Values
-### 1. Total Number of Missing Values
-```{r}
+# Inputing Missing Values
+
+## Total Number of Missing Values
 table(is.na(activityData$steps))
-```
-The TRUE value accounts for all the missing values.
-### 2. Filling in the NA Values
-```{r}
-## Splitting the Data According to Dates (with NA)
-# creating identical data.frame
+
+## Filling in the NA Values
+### Splitting the Data According to Dates (with NA)
 activityDataFilled <- activityData
-
-# splitting the activityData by date
 splitOfActivityDataFilled <- split(activityDataFilled$steps,activityDataFilled$date, drop = T)
+# meanStepsFilled <- sapply(splitOfActivityDataFilled,mean)
 
-# total number of NA values
+# head(activityDataFilled)
+# head(splitOfActivityDataFilled)
+# head(meanStepsFilled)
+### Creating Vector lengthIsNA which Contains the Number corresponding to the subset of an NA value
 lengthIsNA <- 1:length(is.na(activityData$steps))
+# lengthIsNA[is.na(activityData$steps)]
+# length(lengthIsNA[is.na(activityData$steps)])
 
-# disabling warnings as the warning produced is only due to "meanSteps" being only a single value and not of the same length as the NA vector it is supposed to fill
-options(warn = -1)
 
-# filling in the NA values with the corresponding mean of that day
-for(i in lengthIsNA[is.na(activityData$steps)]){
-      activityDataFilled$steps[i] <- meanSteps # DatewithNA[[activityData$date[1]]]
-}
-
-# re-enabling warning to default setup
-options(warn = 0)
-
-## checking if it worked:
-head(activityData)
+################
+### Control: ###
+################
 head(activityDataFilled)
-```
+# max(activityDataFilled$steps)
+# 
+activityData[800,1]
+activityDataFilled[800,1]
+activityDataFilled[1,1]
+################
 
+# What is Mean Total Number of Steps Taken per Day (Filled NA)?
+## Histogram of Total Number of Steps Taken Each Day (Filled NA)
+############
+# splitOfActivityDatanoNA <- split(activityDatanoNA$steps,activityDatanoNA$date, drop = T)
+# 
+# ### Calculating the Sum of Steps for Each Day (Filled NA)
+# sumSteps <- sapply(splitOfActivityDatanoNA,sum)
+# sumSteps <- as.vector(sumSteps)
+############
 
-### 3. Histogram of Total Number of Steps Taken Each Day (Filled NA)
-```{r}
-# splitting the data according to dates (filled NA)
+### Splitting the Data According to Dates (Filled NA)
 splitOfActivityDataFilled <- split(activityDataFilled$steps,activityDataFilled$date, drop = T)
 
-# calculating the sum of steps for each day (filled NA)
+### Calculating the Sum of Steps for Each Day (Filled NA)
 sumStepswithNA <- sapply(splitOfActivityDataFilled,sum)
 sumStepswithNA <- as.vector(sumStepswithNA)
 
-# drawing the histogram
 hist(sumStepswithNA, main = "Number of Steps per Day (NA Filled)", xlab = "Number of Steps per Day")
-```
+
 ### Mean Total Number of Steps Taken per Day (Filled NA)
-```{r}
-# calculating the mean total number of steps taken per day
 meanStepsFilled <- sapply(splitOfActivityDataFilled,mean)
 meanStepsFilled <- as.vector(meanStepsFilled)
-
-# returning the total mean
 mean(meanStepsFilled)
-```
-
 
 ### Median Total Number of Steps Taken per Day (Filled NA)
-```{r}
-# calculating the median total number of steps taken per day
 medianStepsFilled <- sapply(splitOfActivityDataFilled,median)
 medianStepsFilled <- as.vector(medianStepsFilled)
-
-# returning the total median
 median(medianStepsFilled)
-```
 
 
-## Time Series Plot
-### 1. Plot
-```{r}
-# preparing the plot
+
+# Time Series Plot
+## Plot
 splitOfActivityDataInterval <- split(activityDataFilled$steps,activityDataFilled$interval, drop = T)
 meanStepsInterval <- sapply(splitOfActivityDataInterval,mean)
 meanStepsIntervalVector <- as.vector(meanStepsInterval)
+activityDataFilled[1:288,3]
 
-# drawing the plot
 plot(activityDataFilled[1:288,3], meanStepsIntervalVector, type = "l", main = "Time Series Plot", xlab = "5 min Intervals", ylab = "Number of Steps")
-
-# adding a
 abline(v=activityDataFilled[1:288,3][meanStepsIntervalVector==max(meanStepsIntervalVector)], col = "red") # Interval with maximum number of steps
-```
-### 2. Which 5 min Interval has the Maximum Number of Steps on Average
-```{r}
+
+## Which 5 min Interval has the Maximum Number of Steps on Average
 activityDataFilled[1:288,3][meanStepsIntervalVector==max(meanStepsIntervalVector)]
-```
 
 
-## Creating a New Vector Variable: Weekday/ Weekend
-```{r}
-# checking if packages are installed and install.packages if not installed
+# Creating a New Vector Variable: Weekday/ Weekend
+## Checking if packages are installed and install.packages if not installed
 if(!("data.table" %in% row.names(installed.packages()))){
       install.packages(datatable)
 }
-
-# loading package
 library(data.table)
-
-# creating vector of 61 dates
+## Creating Vector of 61 Dates
 activityDataFilledDT <- as.data.table(activityDataFilled)
 dates <- as.vector(activityDataFilledDT[,.N,by=date]$date)
-
-# extracting the weekdays of the above vector
+## Extracting the weekdays of the above Vector
 datesNames <- strftime(dates, format = "%A", tz = "GMT", usetz = FALSE)
-
-# Creating a reference data.table with dates, workday names and numbering
+## Creating a reference data.table with dates, workday names and numbering
 DT1 <- as.data.table(dates)
 DT1$key <- 1:length(dates)
 setkey(DT1,key)
@@ -199,8 +161,8 @@ setkey(workday,key)
 DT4 <- merge(DT1,DT2)
 DT5 <- merge(workday,DT4)
 referenceDT <- subset(DT5, select = -key)
-
-# filling the data.table with corresponding workdays (weekday/ weekend)
+referenceDT
+## 
 activityDataFilledDT <- as.data.table(activityDataFilled)
 activityDataFilledDT$workdays <- as.character(activityDataFilledDT$date)
 activityDataFilledDT$numbering <- 1:length(activityDataFilledDT$workdays)
@@ -208,37 +170,25 @@ for (i in 1:length(referenceDT$dates)){
        subset <- activityDataFilledDT$numbering[activityDataFilledDT$date == referenceDT$dates[i]]
        activityDataFilledDT$workdays[min(subset):max(subset)] <- referenceDT$workday[i]
 }
-
-# removing the numbering column
 activityDataFilledDT <- subset(activityDataFilledDT, select = -numbering)
-
-# checking if it worked:
-head(activityDataFilled)
 head(activityDataFilledDT)
-```
 
+# 
 
-## Differences in Activity Between Weekdays and Weekends
-### Time Series Plot (Weekdays)
-```{r}
-# preparing the plot
+# Time Series Plot (Weekdays)
 splitOfActivityDataWorkdays <- split(activityDataFilledDT,activityDataFilledDT$workdays, drop = T)
 splitOfActivityDataWeekday <- splitOfActivityDataWorkdays$weekday
 splitOfActivityDataWeekday <- split(splitOfActivityDataWeekday$steps,splitOfActivityDataWeekday$interval, drop = T)
 meanStepsIntervalWeekday <- sapply(splitOfActivityDataWeekday,mean)
 meanStepsIntervalWeekdayVector <- as.vector(meanStepsIntervalWeekday)
-
-# drawing the plot
 par(mfrow = c(2,1))
 plot(activityDataFilled[1:288,3], meanStepsIntervalWeekdayVector, type = "l", main = "Time Series Plot (Weekday)", xlab = "5 min Intervals", ylab = "Number of Steps")
 
-# preparing the plot
+# Time Series Plot (Weekend)
 splitOfActivityDataWorkdays <- split(activityDataFilledDT,activityDataFilledDT$workdays, drop = T)
 splitOfActivityDataWeekend <- splitOfActivityDataWorkdays$weekend
 splitOfActivityDataWeekend <- split(splitOfActivityDataWeekend$steps,splitOfActivityDataWeekend$interval, drop = T)
 meanStepsIntervalWeekend <- sapply(splitOfActivityDataWeekend,mean)
 meanStepsIntervalWeekendVector <- as.vector(meanStepsIntervalWeekend)
-
-# drawing the plot
+# activityDataFilledDT[1:288,3]
 plot(activityDataFilled[1:288,3], meanStepsIntervalWeekendVector, type = "l", main = "Time Series Plot (Weekend)", xlab = "5 min Intervals", ylab = "Number of Steps")
-```
